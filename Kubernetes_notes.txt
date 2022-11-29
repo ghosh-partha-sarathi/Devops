@@ -272,3 +272,4 @@ kubectl commands:
 
 28. stream a pods logs
     kubectl logs -f <pod_name>
+    
