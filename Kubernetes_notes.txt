@@ -1,0 +1,274 @@
+
+- Kubernetes(K8s) is an open source system for automating deployment, scaling and management of containerized applications.
+- Key Kubernetes features/benefits-
+    Service Discovery/Load Balancing
+    Storage Orchestration
+    Automate rollouts and rollbacks
+    Self healing - If one container gets down Kubernetes can bring up a new one in its place.
+    Secret and configuration management
+    Horizontal scaling of containers - We can change the state of a Kubernetes cluster to add new pods/containers. 
+    Zero downtime deployment
+    
+- Benefits of Docker
+    Faster developer onboarding
+    Eliminate App Conflicts
+    Environment Consistency
+    Faster shipping
+    
+=================================================================================
+PODs
+- They are the basic building blocks of Kubernetes.
+- A Pod is the basic execution unit of Kubernetes application. 
+  It is the smallest and simplest unit in Kubernetes object model that is created and/or deployed.
+- They act as environment for Docker containers.
+- One Pod can contain multiple containers.
+- A Pod has IP address, memory, volumes etc. which can be shared between containers within it.
+- Pods live and die but never came back to life i.e. Pods can be created and destroyed but are never re-created.
+- Containers within a Pod share same IP address hence same port number can't be used by multiple containers within same Pod.
+- 
+    
+- Failed pod containers are recreated by default
+* If a pod is deleted and has a deployment behind, then it gets recreated automatically.
+
+Probes:
+- Kubernetes uses Probes to determine the health of Pod containers
+- Probe is a diagnostic performed periodically by kubelet on a containers
+- Two types of Probe
+    1. Liveness Probe - It is used to determine if a pod is healthy and running as expected.
+    2. Readiness Probe - It is used to determine if a pod is ready to receive requests.
+- If a container fails Probe test then it can be restarted.
+- Restart policy is always set as 'yes' by default.
+
+- YAML files are composed of maps and lists.
+- Always use spaces and NOT tabs for indentation in YAML.
+
+Deployments and ReplicaSet
+- A ReplicaSet is declarative way to manage Pods.
+- A Deployment is a declarative way to manage Pods using ReplicaSet.
+  It can be considered as a wrapper around ReplicaSets.
+
+    ReplicaSets acts as Pod controller-
+    - They provide self-healing mechanism
+    - Ensures that the requested number of Pods are available at all times
+    - Provides fault tolerance
+    - Can be used to scale pods horizontally
+    - Relies on Pod templates
+    - We use ReplicaSets and Deployments to create Pods.
+      Hence removes the need for creating Pods directly.
+    - They are used by Deployments
+    - ReplicaSets use controllers to control Pods.
+
+    Deployments-
+    - They manage ReplicaSets.
+    - Scales ReplicaSets in turn scales Pods
+    - Provides Zero downtime updates by creating and deleting ReplicaSets
+    - Provides rollback feature
+    - Creates uniuq label that is assigned to the ReplicaSet and generated Pods. 
+      A label hooks or joins Deployment with a pod template.
+    - YAML for Deploymets are very similar to ReplicaSets
+
+    Deployment Options:
+    - Rolling updates
+    - Blue-Green deployment
+        Multiple environments are running at exactly same time.
+        Once the deployment is proven good all the traffic is directed towards it.
+    - Canary deployment
+        A very small amount of traffic is directed towards a new deployment. 
+        Once that is proven by users hitting it all the traffic is switched towards the new deployment.
+    - Rollback
+        Going back to previous version.
+
+Services:
+    A service provides a singlr point of entry for accessing one or more Pods.
+    Services are used to interact with pods from outside.
+    We cannot rely on IP address of pods to interact hence we use services.
+    - Services abstract IP addresses of Pods from consumers
+    - Load balances between the Pods
+    - Relies on labels to associate a service with a Pod
+    - Node's kube-proxy creates a virtual IP for Services
+    - Uses Layer 4(TCP/UDP over IP) for networking
+    - Services are not ephemeral and stays for long periods
+    - Creates endpoints which sits between services and Pods
+
+    Service Types:
+    - Cluster IP Service
+    - NodePort Service
+    - Load Balancer Service
+    - ExternalName Service
+
+A pod gets an IP after it gets scheduled hence we cannot determine IP address of a pod in advance.
+- Pods are ephemeral but services stick around for long.
+
+Storage:
+    We use Volumes(primarily, but there are other options available) to store application data 
+    and share it between pods.
+    - A pod can have multiple volumes attached to it.
+    - Containers use mountPath to access data in a Volume.
+    - Kubernetes supports
+        - Volumes
+        - PersistentVolumes
+        - PersistentVolumeClaims
+        - StorageClasses
+            It is a type of storage template that can be used to dynamically provision storage(PersistentVolumes).
+
+    Volume types
+        - Empty Directory (emptyDir)
+        - Host Path (hostPath)
+        -     
+    
+* PersistentVolumeClaims not clear
+* nodeAffinity?
+
+ConfigMaps:
+    They provide a way to store configuration information and provide it to containers.
+
+Secrets:
+    A secret is an Object which contains small amount of sensitive data like passwords, tokens, keys or certificate.
+    - Secrets are used to make sensitive data available to pods and containers.
+    - Secrects can be mounted to pods as files or environment variables.
+
+    Secrets Best Practices
+    - Enable encryption at rest for cluster data
+    - Restrict access to secrets only to trusted users
+    - Limit access to etcd where secrets are stored 
+    - Use SSL/TLS for etcd peer-to-peer communication
+    - We cannot create secrets in manifest file as data in them are base 64 encoded and NOT encrypted
+    - Pods can access secrets so we need to restrict users who can create pods
+
+=================================================================================
+# Powershell set alias for a command
+Set-Alias -Name <alias> -Value <command>
+
+# Linux set temporary alias
+alias <alias_name>=<command>
+
+# Linux set permamnent aliases
+To keep aliases between sessions, we need to save them in shell configuration profile file.
+        e.g. Bash – ~/.bashrc
+            ZSH – ~/.zshrc
+            Fish – ~/.config/fish/config.fish
+vim ~./.bashrc
+add below line in file-
+alias <alias_name>=<command>
+
+# remove an alias added via the command line 
+unalias <alias_name>
+
+kubectl commands:
+1. Create pod using YAML file
+    kubectl create -f file.pod.yaml --dry-run validate=true
+
+2. Create new or update if pod already exists
+    kubectl apply -f file.pod.yaml
+
+3. In order to update pod at a later time we should start pod with --save-config option 
+    kubectl create -f file.pod.yaml --save-config
+    --save-config option adds an annotation which contains all the information about the last run yaml file.
+
+4. To edit YAML of a pod
+    kubectl edit -f file.pod.yaml
+5. kubectl patch 
+6. To delete a pod
+    kubectl delete pod <POD_NAME>
+                or
+    kubectl delete -f file.pod.yaml            
+
+7. get pod details in YAML format
+    kubectl get pod <POD_NAME> -o yaml
+
+8. get pod details in JSON format 
+    kubectl get pod <POD_NAME> -o json
+
+9. Getting details of a pod
+    kubectl describe pod <POD_NAME> 
+
+10. To enter into shell of a pod
+    kubectl exec <POD_NAME> -it sh
+
+11. Get details of all Pods and replicasets
+    kubectl get all
+
+12. Create Deployment
+    kubectl create -f file.deployment.yaml
+        OR 
+    kubectl apply -f file.deployment.yaml
+        OR
+    kubectl craete -f file.deployment.yaml --save-config
+
+13. Get all Deployments
+    kubectl get deployment
+
+14. Get labels
+    kubectl get deployment --show-labels
+
+15. Get deployments for specific label
+    kubectl get deployment -l <label>            
+
+16. Delete deployment
+    kubectl delete deployment <deployment_name>
+        OR
+    kubectl delete deployment -f file.deployment.yaml
+
+17. Scale deployment
+    kubectl scale deployment <deployment_name> --replicas=<num>
+        OR
+    kubectl scale -f file.deployment.yaml --replicas=<num>
+    - we can also add replicas into the yaml file. 
+      In this case deployment will scale at the time of start.
+      
+18. Port forwarding
+    kubectl port-forward pod/<pod_name> external_port:pod_port
+        OR
+    kubectl port-forward deployment/<deployment_name> port
+        OR
+    kubectl port-forward service/<service_name> external_port:pod_port          
+
+19. accessing sheel of a pod
+    kubectl exec <pod-name> -it sh
+
+20. check if a pod within cluster is accessible
+    execute curl command from a different pod within the cluster
+    curl http://<pod_ip>
+
+21. creating a config map 
+    kubectl create configmap <config_name> --from-env-file=<path_to_config_file>    // creating from environment file
+        OR
+    kubectl create configmap <config_name> --from-file=<path_to_config_file>    // creating from config file
+        OR
+    kubectl create configmap <config_name> --from-literal=key_1=value_1 --from-literal=key_2=value_2
+    // loading key-value pairs directly
+        OR
+    kubectl create/apply -f file.configmap.yaml     // creating from a ConfigMap manifest
+
+22. get configmap details
+    kubectl get cm <configmap_name>
+        OR
+    kubectl get cm <configmap_name> -o yaml 
+
+23. creating secrets
+    kubectl create secret generic <secert_name> --from-literal=<key>=<value>
+        // creates a generic secret from key value pair credentials
+        OR
+    kubectl create secret generic <secert_name> --from-file=<key>=<path_to_file>
+        // creates a generic secret from file credentials
+        e.g. kubectl create secret generic <secert_name> --from-file=ssh-privatekey=~/.ssh/id_rsa --from-file=ssh-publickey=~/.ssh/id_rsa.pub
+        OR
+    kubectl create secret tls <secret_name> --cert=<path_to_cert> --key=<path_to_key>
+        // creates a tls secret from tls certificate file
+
+24. get secrets details
+    kubectl get secrets
+        OR
+    kubectl get secrets <secret_name> -o yaml
+
+25. get logs from a pod
+    kubectl logs <pod_name>
+
+26. get logs from a specific container within Pod
+    kubectl logs <pod_name> -c <container_name>         
+
+27. get logs from a previously running Pod
+    kubectl logs -p <pod_name>
+
+28. stream a pods logs
+    kubectl logs -f <pod_name>
